@@ -31,8 +31,8 @@ def read_value_from_sections_file (file_parser, section, option):
             value['Exists'] = True
     return value
 
-def read_value_from_sections_file_and_exit_if_not_found (file_name, section, option):
-    value = read_value_from_sections_file (file_name, section, option)
+def read_value_from_sections_file_and_exit_if_not_found (file_name, file_parser, section, option):
+    value = read_value_from_sections_file (file_parser, section, option)
     if not value['Exists']:
         return_error("Section \"" + section + "\" and option \"" + option + "\" not found in file " + file_name)
     return value['Value']
@@ -233,16 +233,16 @@ configOutputFile = open ("../" + configFileName, 'w', encoding="utf-8")
 iniFilePath = "API_config.ini"
 if not os.path.exists(iniFilePath): return_error("Config file " + iniFilePath + " does not exist")
 iniFileParser = get_parser_from_sections_file (iniFilePath)
-PRISMA_CLOUD_API_URL = read_value_from_sections_file_and_exit_if_not_found (iniFileParser, 'URL', 'URL')
+PRISMA_CLOUD_API_URL = read_value_from_sections_file_and_exit_if_not_found (iniFilePath, iniFileParser, 'URL', 'URL')
 
 #----------- First API call for authentication -----------
 
 action = "POST"
-url = PRISMA_CLOUD_API_URL + read_value_from_sections_file_and_exit_if_not_found (iniFileParser, 'AUTHENTICATION','LOGIN_URL')
+url = PRISMA_CLOUD_API_URL + read_value_from_sections_file_and_exit_if_not_found (iniFilePath, iniFileParser, 'AUTHENTICATION','LOGIN_URL')
 json_header = {'Content-Type': 'application/json'}
 data = {}
-data['username'] = read_value_from_sections_file_and_exit_if_not_found (iniFileParser,'AUTHENTICATION','ACCESS_KEY_ID')
-data['password'] = read_value_from_sections_file_and_exit_if_not_found (iniFileParser,'AUTHENTICATION','SECRET_KEY')
+data['username'] = read_value_from_sections_file_and_exit_if_not_found (iniFilePath, iniFileParser,'AUTHENTICATION','ACCESS_KEY_ID')
+data['password'] = read_value_from_sections_file_and_exit_if_not_found (iniFilePath, iniFileParser,'AUTHENTICATION','SECRET_KEY')
 data_json = json.dumps(data)
 apiResponse = requests.request(action, url, headers=json_header, data=data_json, verify=False) # verify=False to avoid CA certificate error if proxy between script and console
 status = apiResponse.status_code
@@ -253,12 +253,12 @@ if (status != 200):
 else:
     authentication_response = apiResponse.json()
     token = authentication_response['token']
-    auth_header = {read_value_from_sections_file_and_exit_if_not_found (iniFileParser,'AUTHENTICATION','AUTHORIZATIONS'):token}
+    auth_header = {read_value_from_sections_file_and_exit_if_not_found (iniFilePath, iniFileParser,'AUTHENTICATION','AUTHORIZATIONS'):token}
  
     #----------- Get policies modified -----------
 
     action = "GET"
-    url = PRISMA_CLOUD_API_URL + read_value_from_sections_file_and_exit_if_not_found (iniFileParser, 'POLICIES','POLICIES_URL')
+    url = PRISMA_CLOUD_API_URL + read_value_from_sections_file_and_exit_if_not_found (iniFilePath, iniFileParser, 'POLICIES','POLICIES_URL')
     apiResponse = requests.request(action, url, headers=auth_header, verify=False) # verify=False to avoid CA certificate error if proxy between script and console
     status = apiResponse.status_code
 
@@ -274,7 +274,7 @@ else:
         #----------- Get Alert Rules modified -----------
 
         action = "GET"
-        url = PRISMA_CLOUD_API_URL + read_value_from_sections_file_and_exit_if_not_found (iniFileParser, 'ALERT_RULES','ALERT_RULES_URL')
+        url = PRISMA_CLOUD_API_URL + read_value_from_sections_file_and_exit_if_not_found (iniFilePath, iniFileParser, 'ALERT_RULES','ALERT_RULES_URL')
         apiResponse = requests.request(action, url, headers=auth_header, verify=False) # verify=False to avoid CA certificate error if proxy between script and console
         status = apiResponse.status_code
 
